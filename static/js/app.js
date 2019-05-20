@@ -1,8 +1,19 @@
+// Note:  I've seen other screens that clear out filter fields after page is loaded
+// I have decided to keep these loaded so users can be reminded of their filter criteria
+
 // default behavior: get the data and load it into the HTML table
+
 
 // clear out any error message if present
 d3.select(".message").text(""); 
 var message = "";
+
+var inCity
+var inState
+var inCountry
+var inShape
+var inComment
+
 tableData = [];
 getData(tableData);
 console.log(tableData);
@@ -20,8 +31,12 @@ btn.on("click", function() {
     tableData = [];
     getData(tableData);
 
-    var inField = d3.select("#datetime");
-    var inDate = inField.property("value");
+    var inDate = d3.select("#datetime").property("value");
+    inCity = d3.select("#city").property("value").toLowerCase();
+    inState = d3.select("#state").property("value").toLowerCase();
+    inCountry = d3.select("#country").property("value").toLowerCase();
+    inShape = d3.select("#shape").property("value").toLowerCase();
+    inComment = d3.select('#comment').property("value").toLowerCase()
 
     if (inDate > " ")  {
         var splitChar = " ";
@@ -48,11 +63,27 @@ btn.on("click", function() {
             if (idDay < 1 || idDay > 31)  {
                 console.log("invalid day");
                 message = "Invalid day - please enter date in form mm/dd/yy";
+                // of course, we can put it a more elaborate validation for day - and someday we might
             }
 
             console.log(`button click:  inDate = ${idMonth}, ${idDay}, ${idYear}`);
             tableData = tableData.filter(filterByDate);
         }
+    }
+    if (inCity > " ")  {
+        tableData = tableData.filter(filterByCity);
+    }
+    if (inState > " ")  {
+        tableData = tableData.filter(filterByState);
+    }
+    if (inCountry > " ")  {
+        tableData = tableData.filter(filterByCountry);
+    }
+    if (inShape > " ")  {
+        tableData = tableData.filter(filterByShape);
+    }
+    if (inComment > " ")  {
+        tableData = tableData.filter(filterByComment);
     }
 
     loadTable(tableData);
@@ -72,8 +103,8 @@ function getData(tableData) {
     data.forEach (function (itemData, index) {
         if (index === 2) {
             tableData.push(specialLine);
-            // those sneaky folks at Aliens-R-Real central wanted to
-            // make sure that this special line stays in the data!
+            // those sneaky folks at Aliens-R-Real central wanted to make sure
+            // that this special line cannot be edited out of the data file!
         }
         tableData.push(itemData);
     });
@@ -104,11 +135,7 @@ function loadTable(tData) {
     }
     console.log(message);
     d3.select(".message").text(message); 
-
-
 }
-
-
 
 // here be the filtering functions
 function filterByDate(dataLine) {
@@ -116,10 +143,6 @@ function filterByDate(dataLine) {
     // date formats.  For now, we will handle dates in format 
     // mm/dd/yyyy, with parts separated by "/" or "-".
     // these can be one or two digit; if a year is < 1000 we'll add 2000 to it
-
-    // console.log("---------");
-    // console.log(dataLine.datetime);
-    // console.log(`filterByDate:  inDate = ${idMonth}, ${idDay}, ${idYear}`);
 
     if (dataLine.datetime.includes("/")) {
         var dtParts = dataLine.datetime.split("/");
@@ -143,9 +166,22 @@ function filterByDate(dataLine) {
     if ((dtMonth === idMonth) &&
         (dtDay === idDay)  &&
         (dtYear === idYear))  {
-            // console.log("TRUE");
             return true;}
 
-    // console.log("false");
     return false;
+}
+function filterByCity(dataLine) {
+    return inCity === dataLine.city.toLowerCase();
+}
+function filterByState(dataLine) {
+    return inState === dataLine.state.toLowerCase();
+}
+function filterByCountry(dataLine) {
+    return inCountry === dataLine.country.toLowerCase();
+}
+function filterByShape(dataLine) {
+    return inShape === dataLine.shape.toLowerCase();
+}
+function filterByComment(dataLine) {
+    return dataLine.comments.toLowerCase().includes(inComment);
 }
