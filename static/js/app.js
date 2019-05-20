@@ -1,5 +1,11 @@
 // default behavior: get the data and load it into the HTML table
-getData();
+
+// clear out any error message if present
+d3.select(".message").text(""); 
+var message = "";
+tableData = [];
+getData(tableData);
+console.log(tableData);
 loadTable(tableData);
 
 
@@ -8,31 +14,51 @@ var btn = d3.select("#filter-btn");
 
 btn.on("click", function() {
     d3.event.preventDefault();
-    getData();
+    // clear out any error message if present
+    d3.select(".message").text(""); 
+    message = "";
+    tableData = [];
+    getData(tableData);
 
     var inField = d3.select("#datetime");
     var inDate = inField.property("value");
 
-    if (inDate.includes("/")) {
-        var idParts = inDate.split("/");
-    }
-    else if (inDate.includes("-")) {
-        var idParts = inDate.split("-");
-    } 
-    else {
-        console.log(`File date not understood: ${inDate.datetime}`);
-    }
-    idMonth = parseInt(idParts[0]);
-    idDay   = parseInt(idParts[1]);
-    idYear  = parseInt(idParts[2]);
+    if (inDate > " ")  {
+        var splitChar = " ";
+        if (inDate.includes("/")) {
+            splitChar = "/";
+        }
+        else if (inDate.includes("-")) {
+            splitChar = "-";
+        } 
 
+        if (splitChar === " ") {
+            message = "Date format not recognized - please enter in form mm/dd/yy";
+            console.log("Date not recognized");
+        }
+        else {
+            var idParts = inDate.split(splitChar);
+            idMonth = parseInt(idParts[0]);
+            idDay   = parseInt(idParts[1]);
+            idYear  = parseInt(idParts[2]);
+            if (idMonth < 1 || idMonth > 12) {
+                console.log("invalid month");
+                message = "Invalid month - please enter date in form mm/dd/yy";
+            }
+            if (idDay < 1 || idDay > 31)  {
+                console.log("invalid day");
+                message = "Invalid day - please enter date in form mm/dd/yy";
+            }
 
-    console.log(`button click:  inDate = ${idMonth}, ${idDay}, ${idYear}`);
-    tableData = tableData.filter(filterByDate);
+            console.log(`button click:  inDate = ${idMonth}, ${idDay}, ${idYear}`);
+            tableData = tableData.filter(filterByDate);
+        }
+    }
+
     loadTable(tableData);
-})
+});
 
-function getData() {
+function getData(tableData) {
     var specialLine = {
         datetime: "1/28/1996",
         city: "dallas",
@@ -43,8 +69,6 @@ function getData() {
         comments: "Cowboys win a superbowl, that's alien!"
     };
     
-
-    tableData = []
     data.forEach (function (itemData, index) {
         if (index === 2) {
             tableData.push(specialLine);
@@ -63,13 +87,25 @@ function loadTable(tData) {
     var tbl = document.getElementById("ufo-table");
     for (var i = tbl.rows.length - 1; i > 0; i--)  { tbl.deleteRow(i);}
 
-    tData.forEach (function (itemData) {
-        var row = tbody.append("tr");
-        Object.entries(itemData).forEach(function([key, value])  {
-            var cell = row.append("td");
-            cell.text(value);
+    if (tData.length === 0) {
+        console.log("No matching data");
+        if (message === "") {
+            message = "No matching data was found for filtered search";
+        }
+    }
+    else {
+        tData.forEach (function (itemData) {
+            var row = tbody.append("tr");
+            Object.entries(itemData).forEach(function([key, value])  {
+                var cell = row.append("td");
+                cell.text(value);
+            } );
         } );
-    } );
+    }
+    console.log(message);
+    d3.select(".message").text(message); 
+
+
 }
 
 
@@ -113,4 +149,3 @@ function filterByDate(dataLine) {
     // console.log("false");
     return false;
 }
-
